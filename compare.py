@@ -1,71 +1,72 @@
-import cv2
+# import the necessary packages
+from skimage.metrics import structural_similarity as ssim
+import matplotlib.pyplot as plt
 import numpy as np
-
-# original = cv2.imread('images/parking-vision-01-img_2019-12-17_16-26-15.jpg')
-# duplicate = cv2.imread('images/parking-vision-01-img_2019-12-18_08-08-14.jpg')
-
-# if original.shape == duplicate.shape:
-#   difference = cv2.subtract(original, duplicate)
-
-#   b, g, r = cv2.split(difference)
-
-#   if cv2.countNonZero(b) == 0 and cv2.countNonZero(g) == 0 and cv2.countNonZero(r) == 0:
-#     return True
-
-# print('The images are different')
-
-# img1 = cv2.imread('./previous.jpg')
-# img2 = cv2.imread('./parking-vision-01-img_2019-12-18_22-13-50.jpg')
-
-# diff = cv2.absdiff(img1, img2)
-# mask = cv2.cvtColor(diff, cv2.COLOR_BGR2GRAY)
-
-# th =1
-# imask = mask>th
-
-# canvas = np.zeros_like(img2, np.uint8)
-# canvas[imask] = img2[imask]
-
-# cv2.imwrite('results.png', canvas)
-
 import cv2
-import numpy as np
-from skimage.measure import compare_ssim as ssim
 
 def mse(imageA, imageB):
-    # the 'Mean Squared Error' between the two images is the
-    # sum of the squared difference between the two images;
-    # NOTE: the two images must have the same dimension
-    err = np.sum((imageA.astype("float") - imageB.astype("float")) ** 2)
-    err /= float(imageA.shape[0] * imageA.shape[1])
+	# the 'Mean Squared Error' between the two images is the
+	# sum of the squared difference between the two images;
+	# NOTE: the two images must have the same dimension
+	err = np.sum((imageA.astype("float") - imageB.astype("float")) ** 2)
+	err /= float(imageA.shape[0] * imageA.shape[1])
 
-    # return the MSE, the lower the error, the more "similar"
-    # the two images are
+	# return the MSE, the lower the error, the more "similar"
+	# the two images are
+	return err
 
-def diff_remove_bg(img0, img, img1):
-    d1 = diff(img0, img)
-    d2 = diff(img, img1)
-    return cv2.bitwise_and(d1, d2)
+def compare_images(imageA, imageB, title):
+	# compute the mean squared error and structural similarity
+	# index for the images
+	m = mse(imageA, imageB)
+	s = ssim(imageA, imageB)
 
-x1 = cv2.imread("parking-vision-01-img_2019-12-18_22-13-50.jpg")
-x2 = cv2.imread("previous.jpg")
+	print("%s: MSE: %.2f, SSIM: %.2f" % (title, m, s))
 
-x1 = cv2.cvtColor(x1, cv2.COLOR_BGR2GRAY)
-x2 = cv2.cvtColor(x2, cv2.COLOR_BGR2GRAY)
+	# setup the figure
+	# fig = plt.figure(title)
+	# plt.suptitle("MSE: %.2f, SSIM: %.2f" % (m, s))
 
-absdiff = cv2.absdiff(x1, x2)
-cv2.imwrite("images/absdiff.png", absdiff)
+	# # show first image
+	# ax = fig.add_subplot(1, 2, 1)
+	# plt.imshow(imageA, cmap = plt.cm.gray)
+	# plt.axis("off")
 
-diff = cv2.subtract(x1, x2)
-result = not np.any(diff)
+	# # show the second image
+	# ax = fig.add_subplot(1, 2, 2)
+	# plt.imshow(imageB, cmap = plt.cm.gray)
+	# plt.axis("off")
 
-m = mse(x1, x2)
-s = ssim(x1, x2)
+	# # show the images
+	# plt.show()
 
-print("mse: %s, ssim: %s" % (m, s))
+# load the images -- the original, the original + contrast,
+# and the original + photoshop
+original = cv2.imread("images/parking-vision-01-img_2019-12-19_09-51-21.jpg")
+repeat = cv2.imread("images/parking-vision-01-img_2019-12-19_10-01-21.jpg")
+contrast = cv2.imread("images/parking-vision-01-img_2019-12-19_10-21-59.jpg")
 
-if result:
-    print("The images are the same")
-else:
-    cv2.imwrite("images/diff.png", diff)
-    print("The images are different")
+# convert the images to grayscale
+original = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
+repeat = cv2.cvtColor(repeat, cv2.COLOR_BGR2GRAY)
+contrast = cv2.cvtColor(contrast, cv2.COLOR_BGR2GRAY)
+
+# initialize the figure
+fig = plt.figure("Images")
+images = ("Original", original), ("Contrast", contrast), ("Repeat", repeat)
+
+# loop over the images
+# for (i, (name, image)) in enumerate(images):
+# 	# show the image
+# 	ax = fig.add_subplot(1, 3, i + 1)
+# 	ax.set_title(name)
+# 	plt.imshow(image, cmap = plt.cm.gray)
+# 	plt.axis("off")
+
+# # show the figure
+# plt.show()
+
+# compare the images
+compare_images(original, original, "Original vs. Original")
+compare_images(original, repeat, "Original vs. Repeat")
+compare_images(original, contrast, "Original vs. Contrast")
