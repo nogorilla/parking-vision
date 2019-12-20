@@ -1,4 +1,4 @@
-from cv2 import *
+import cv2
 import boto3
 import datetime
 import os
